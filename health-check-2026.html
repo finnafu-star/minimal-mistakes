@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>2026 健康檢查建議查詢｜參考國健署</title>
+  <style>
+    :root { font-family: "Noto Sans TC", system-ui, sans-serif; color-scheme: light; }
+    body { margin: 0; background: #f4f7fb; color: #10243e; }
+    .wrap { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 14px; box-shadow: 0 6px 18px rgba(20,45,90,.08); padding: 20px; }
+    h1 { margin-top: 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 12px; }
+    label { font-weight: 700; font-size: 14px; display: block; margin-bottom: 6px; }
+    input,select { width: 100%; padding: 10px; border: 1px solid #c9d7ea; border-radius: 10px; }
+    button { margin-top: 14px; border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 700; background: #1f64ff; color: #fff; cursor: pointer; }
+    .item { border: 1px solid #dbe6f7; border-radius: 10px; padding: 12px; margin-top: 10px; }
+    .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #e8f0ff; color: #1a4fc2; }
+    .small { font-size: 13px; color: #4b607c; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>各年齡層健康檢查建議查詢</h1>
+      <p class="small">查詢結果依「國民健康署 114 年（西元 2025）擴大癌症篩檢」與現行成人預防保健規則整理，作為 2026 年參考。實際資格與最新政策請以國健署公告為準。</p>
+
+      <div class="grid">
+        <div>
+          <label for="age">年齡</label>
+          <input id="age" type="number" min="0" max="120" value="30" />
+        </div>
+        <div>
+          <label for="sex">生理性別</label>
+          <select id="sex">
+            <option value="female">女性</option>
+            <option value="male">男性</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:10px">
+        <label><input type="checkbox" id="smoke" /> 有吸菸習慣</label>
+        <label><input type="checkbox" id="betel" /> 有嚼檳榔習慣（含已戒）</label>
+        <label><input type="checkbox" id="lungRisk" /> 有肺癌家族史（父母、子女、兄弟姊妹）</label>
+      </div>
+
+      <button id="searchBtn">查詢建議項目</button>
+      <div id="result" style="margin-top: 12px"></div>
+    </div>
+  </div>
+
+  <script>
+    const checks = [
+      {name:'成人預防保健（40-64歲每3年1次；65歲以上每年1次）', when: p => (p.age>=40&&p.age<=64)||(p.age>=65), freq: p => p.age>=65?'每年1次':'每3年1次', note:'包含血壓、血糖、血脂、腎功能、肝功能、尿液、健康諮詢等。'},
+      {name:'子宮頸癌篩檢（子宮頸抹片）', when: p => p.sex==='female'&&p.age>=25, freq: p => '25-29歲每3年1次；30歲以上建議至少每3年1次', note:'符合國健署公費篩檢年齡。'},
+      {name:'乳癌篩檢（乳房X光攝影）', when: p => p.sex==='female'&&p.age>=40&&p.age<=74, freq: p => '每2年1次', note:'40-74歲婦女。'},
+      {name:'大腸癌篩檢（糞便潛血檢查）', when: p => p.age>=45&&p.age<=74, freq: p => '每2年1次', note:'45-74歲民眾。'},
+      {name:'口腔癌篩檢（口腔黏膜檢查）', when: p => p.age>=30&&(p.smoke||p.betel), freq: p => '每2年1次', note:'30歲以上具吸菸或嚼檳榔（含已戒）族群。'},
+      {name:'肺癌篩檢（低劑量電腦斷層 LDCT）', when: p => (p.sex==='male'&&p.age>=45&&p.age<=74&&p.lungRisk) || (p.sex==='female'&&p.age>=40&&p.age<=74&&p.lungRisk), freq: p => '每2年1次（依院所評估）', note:'具肺癌家族史之高風險族群。'}
+    ];
+
+    function render() {
+      const p = {
+        age: Number(document.getElementById('age').value),
+        sex: document.getElementById('sex').value,
+        smoke: document.getElementById('smoke').checked,
+        betel: document.getElementById('betel').checked,
+        lungRisk: document.getElementById('lungRisk').checked
+      };
+      const list = checks.filter(c => c.when(p));
+      const result = document.getElementById('result');
+      if (!list.length) {
+        result.innerHTML = '<div class="item">目前沒有符合公費篩檢條件的項目，建議定期健康諮詢與自費健檢評估。</div>';
+        return;
+      }
+      result.innerHTML = list.map(c => `
+        <div class="item">
+          <div class="tag">建議檢查</div>
+          <h3>${c.name}</h3>
+          <p><strong>頻率：</strong>${c.freq(p)}</p>
+          <p class="small">${c.note}</p>
+        </div>
+      `).join('');
+    }
+    document.getElementById('searchBtn').addEventListener('click', render);
+    render();
+  </script>
+</body>
+</html>
